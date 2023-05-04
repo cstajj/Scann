@@ -20,8 +20,8 @@ namespace ScannMain
     public partial class Main : Form
     {
         private static int imgShowIndex = 1;
-        private static string showIndex = "";
-        private static string showSuqIndex = "";
+        private static string showIndex = "";//显示步骤 1,2,3,4
+        private static string showSuqIndex = "";//显示检测到的矩形下标(每个答题卡有很多框) 1,2,3
 
         public Main()
         {
@@ -181,10 +181,19 @@ namespace ScannMain
         /// <summary>
         /// 匹配答案
         /// </summary>
-        /// <param name="path">需检测的图片路径</param>
-        /// <param name="row">答案的总行数</param>
-        /// <param name="column">答案的总列数</param>
-        public static Mat MatchAnswer(string path, int row, int column, int par1, int par2, int par3, int par4, int judgeSize, out int[,] resultArray, out List<Point[]> selectOption, out int fzfgCount)
+        /// <param name="path">文件路径</param>
+        /// <param name="row">答案行数</param>
+        /// <param name="column">答案列数</param>
+        /// <param name="par1">阈值Min</param>
+        /// <param name="par2">阈值Max</param>
+        /// <param name="height">填涂框的高度 px</param>
+        /// <param name="width">填涂框的宽度 px</param>
+        /// <param name="judgeSize">填涂覆盖值，达到这个值才为选中</param>
+        /// <param name="resultArray">返回数据</param>
+        /// <param name="selectOption">选中数据</param>
+        /// <param name="fzfgCount">阈值调整次数</param>
+        /// <returns></returns>
+        public static Mat MatchAnswer(string path, int row, int column, int par1, int par2, int height, int width, int judgeSize, out int[,] resultArray, out List<Point[]> selectOption, out int fzfgCount)
         {
             resultArray = new int[,] { };
             selectOption = new List<Point[]>();
@@ -199,6 +208,7 @@ namespace ScannMain
             int selectOptionCount = 0;
             List<Point[]> selected_contour = new List<Point[]>();
             fzfgCount = 0;
+            //自动调整阈值，取到填涂框才继续
             while (selectOptionCount <= 1)
             {
                 if (fzfgCount >= 100)
@@ -208,7 +218,7 @@ namespace ScannMain
                 fzfgCount++;
                 Cv2.Threshold(birdMat, target, par1, par2, ThresholdTypes.BinaryInv);//修改thresh或maxval可以调整轮廓取值范围(调的不好会直接取外面的大轮廓)
                 ShowImg(target, "阈值分割");
-                selected_contour = SelectedContour(target, par3, par4);
+                selected_contour = SelectedContour(target, height, width);
                 selectOptionCount = selected_contour.Count();
             }
             selectOption = selected_contour;
@@ -323,6 +333,7 @@ namespace ScannMain
                         ShowImg2(birdMat, "鸟瞰" + i + "|" + tem.ToString("f2") + (pass ? "|通过" : ""));
                     }
                 }
+                //取面积最大的矩形为检测填涂区域，所以在做答题卡时需要把填涂区的框做最大，或者自己调整，但上面的判断也需要一并调整
                 result_contour = contours[index];
 
             }
