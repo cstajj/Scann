@@ -184,7 +184,7 @@ namespace ScannMain
         /// <param name="path">文件路径</param>
         /// <param name="row">答案行数</param>
         /// <param name="column">答案列数</param>
-        /// <param name="par1">阈值Min</param>
+        /// <param name="par1">阈值Min可以默认给150</param>
         /// <param name="par2">阈值Max</param>
         /// <param name="height">填涂框的高度 px</param>
         /// <param name="width">填涂框的宽度 px</param>
@@ -193,8 +193,16 @@ namespace ScannMain
         /// <param name="selectOption">选中数据</param>
         /// <param name="fzfgCount">阈值调整次数</param>
         /// <returns></returns>
-        public static Mat MatchAnswer(string path, int row, int column, int par1, int par2, int height, int width, int judgeSize, out int[,] resultArray, out List<Point[]> selectOption, out int fzfgCount)
+        public static Mat MatchAnswer(string path, int? row, int? column, int? par1, int? par2, int? height, int? width, int? judgeSize, out int[,] resultArray, out List<Point[]> selectOption, out int fzfgCount)
         {
+            JudgeHasValueAndSet(row, 4);
+            JudgeHasValueAndSet(column, 6);
+            JudgeHasValueAndSet(par1, 150);
+            JudgeHasValueAndSet(par2, 255);
+            JudgeHasValueAndSet(height, 35);
+            JudgeHasValueAndSet(width, 50);
+            JudgeHasValueAndSet(judgeSize, 1500);
+
             resultArray = new int[,] { };
             selectOption = new List<Point[]>();
 
@@ -216,9 +224,9 @@ namespace ScannMain
                 if (fzfgCount > 0)
                     par1--;
                 fzfgCount++;
-                Cv2.Threshold(birdMat, target, par1, par2, ThresholdTypes.BinaryInv);//修改thresh或maxval可以调整轮廓取值范围(调的不好会直接取外面的大轮廓)
+                Cv2.Threshold(birdMat, target, par1.Value, par2.Value, ThresholdTypes.BinaryInv);//修改thresh或maxval可以调整轮廓取值范围(调的不好会直接取外面的大轮廓)
                 ShowImg(target, "阈值分割");
-                selected_contour = SelectedContour(target, height, width);
+                selected_contour = SelectedContour(target, height.Value, width.Value);
                 selectOptionCount = selected_contour.Count();
             }
             selectOption = selected_contour;
@@ -228,7 +236,7 @@ namespace ScannMain
             Cv2.DrawContours(answerSheet_con, selected_contour, -1, new Scalar(0, 0, 255), 2);
 
             ShowImg(answerSheet_con, "选项");
-            List<Point>[,] classed_contours = ClassedOfContours(selected_contour, row, column);
+            List<Point>[,] classed_contours = ClassedOfContours(selected_contour, row.Value, column.Value);
 
             //5.绘制并验证
             List<Scalar> color = new List<Scalar>();
@@ -254,7 +262,7 @@ namespace ScannMain
 
 
             //检测答题者的选项
-            resultArray = GetResultArray(target, classed_contours, row, column, judgeSize);
+            resultArray = GetResultArray(target, classed_contours, row.Value, column.Value, judgeSize.Value);
             Mat resultMat = new Mat();
             Cv2.CvtColor(target, resultMat, ColorConversionCodes.GRAY2BGR);
 
@@ -273,6 +281,11 @@ namespace ScannMain
 
             ShowImg(resultMat, "结果");
             return resultMat;
+        }
+
+        public static void JudgeHasValueAndSet(int? value,int defaultValue = 0) {
+            if (value == null)
+                value = defaultValue;
         }
 
         /// <summary>
