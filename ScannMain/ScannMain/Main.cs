@@ -19,10 +19,7 @@ namespace ScannMain
 {
     public partial class Main : Form
     {
-        private static int imgShowIndex = 1;
-        private static string showIndex = "";//显示步骤 1,2,3,4
-        private static string showSuqIndex = "";//显示检测到的矩形下标(每个答题卡有很多框) 1,2,3
-
+        
         public Main()
         {
             InitializeComponent();
@@ -178,6 +175,9 @@ namespace ScannMain
             return dir.GetFiles(".", System.IO.SearchOption.AllDirectories);
         }
 
+        private static int imgShowIndex = 1;
+        private static string showIndex = "";//显示步骤 1234
+        private static string showSuqIndex = "";//显示检测到的矩形下标(每个答题卡有很多框) 123
         /// <summary>
         /// 匹配答案
         /// </summary>
@@ -225,7 +225,7 @@ namespace ScannMain
                     par1--;
                 fzfgCount++;
                 Cv2.Threshold(birdMat, target, par1.Value, par2.Value, ThresholdTypes.BinaryInv);//修改thresh或maxval可以调整轮廓取值范围(调的不好会直接取外面的大轮廓)
-                ShowImg(target, "阈值分割");
+                //ShowImg(target, "阈值分割");
                 selected_contour = SelectedContour(target, height.Value, width.Value);
                 selectOptionCount = selected_contour.Count();
             }
@@ -487,7 +487,7 @@ namespace ScannMain
             //1.改善轮廓
             Mat element = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(1, 1));
             Cv2.Dilate(target, target, element);
-            ShowImg(target);
+            //ShowImg(target);
             //2.筛选轮廓
             Point[][] target_contour;
             List<Point[]> selected_contour = new List<Point[]>();
